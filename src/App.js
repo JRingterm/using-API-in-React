@@ -2,28 +2,39 @@ import { useState, useEffect } from "react";
 
 function App() {
   const [loading, setLoading] = useState(true);
-  const [staffs, setStaff] = useState([]);//json 데이터를 보여주기위한 state
+  const [movies, setMovies] = useState([]);//영화 API를 저장할 배열
+  const getMovies = async() => {
+    const json = await (
+      await fetch(
+      'https://yts.mx/api/v2/list_movies.json?minimum_rating=8.8&sort_by=year'
+      )
+    ).json();
+    setMovies(json.data.movies);//json데이터에서 data.movies를 가져옴
+    setLoading(false);//데이터를 가져왔으므로 Loading false
+  };
   useEffect(() => {
-    fetch("https://jsonplaceholder.typicode.com/users") //이 주소로 들어가면 해당API에 대한 상세한 정보 존재.
-      .then((response) => response.json()) //response로부터 json 추출
-      .then((json) => {
-        setStaff(json);
-        setLoading(false);
-      }); //그 json을 state로 넘기고, loading을 멈춤
-    }, []); //컴포넌트가 시작할때 한번만 실행.
-
+    getMovies();
+  },[]);
+  console.log(movies);
   //JavaScript를 쓸때는 항상 {}안에 쓰기. 안그러면 그냥 텍스트가 됨!
   return (
     <div>
-      <h1>The Staff! ({staffs.length})</h1> 
-      {loading ? <strong>Loading...</strong> : 
-        <select>
-          {staffs.map((staff) => 
-            <option>
-              {staff.id}. {staff.name} ({staff.username}): {staff.address.street}, {staff.address.suite}
-            </option>
-          )}
-        </select>
+      {loading ? <h1>Loading...</h1> : 
+        movies.map((movie) => (
+          <div key={movie.id}> 
+            <img src={movie.medium_cover_image} />
+            <h2>{movie.title}</h2>
+            <p>{movie.summary}</p>
+            {(movie.hasOwnProperty("genres") ? //장르가 없는 영화도 존재하기에, 장르가 있나없나 검사.
+              <ul> 
+                {movie.genres.map(g => (
+                  <li key={g}>{g}</li>
+                ))}
+              </ul> : null
+            )}
+            
+          </div>
+        ))
       }
     </div>
   );
